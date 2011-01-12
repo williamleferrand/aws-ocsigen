@@ -9,7 +9,7 @@ open Misc
 
 let sign sec2 request = 
   let sorted_attributes = List.sort (fun (k1, v1)  (k2, v2) -> String.compare k1 k2) request in
-  let encoded_attributes = List.map (fun (k, v) -> encodeplus k, encodeplus v) sorted_attributes in
+  let encoded_attributes = List.map (fun (k, v) -> encode k, encode v) sorted_attributes in
   let raw_request = List.fold_left (fun acc (k,v) -> 
     if acc = "" then 
       Printf.sprintf "%s=%s" k v 

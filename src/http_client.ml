@@ -4,6 +4,8 @@
  * (c) 2011 William Le Ferrand
  *)
 
+open Misc
+
 (* Taken from ocsigen, directly *)
 
 (* Ocsigen
@@ -724,9 +726,15 @@ let post_string ?https ?port ?(headers = Http_headers.empty)
 
 (*****************************************************************************)
 let post_urlencoded ?https ?port ?headers ~host ~uri ~content () =
+  let encoded_attributes = List.map (fun (k, v) -> encode k, encode v) content in
+  let raw_request = List.fold_left (fun acc (k,v) -> 
+    if acc = "" then 
+      Printf.sprintf "%s=%s" k v 
+    else 
+      Printf.sprintf "%s&%s=%s" acc k v) "" encoded_attributes in
   post_string ?https ?port ?headers
     ~host ~uri
-    ~content:(Netencoding.Url.mk_url_encoded_parameters content) 
+    ~content:raw_request
     ~content_type:("application","x-www-form-urlencoded")
     ()
 

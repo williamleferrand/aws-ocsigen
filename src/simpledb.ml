@@ -128,10 +128,10 @@ let select connection ?(token=None) request =
      ("AWSAccessKeyId", connection.access_key_id) :: 
        ("Action", "Select") ::
        ("SelectExpression", request) ::
-	("SignatureMethod", "HmacSHA1") ::
+       ("SignatureMethod", "HmacSHA1") ::
        ("SignatureVersion", "2") ::
        ("Timestamp", (current_timestamp ())) ::
-       ("Version", "2009-04-15") :: (match token with None -> [] | Some id -> [ ("NextToken", id) ]) in
+       ("Version", "2009-04-15") :: (match token with None -> [] | Some id -> [ "NextToken", id ]) in
    
    let signature = Authentication.sign connection request in
    Printf.printf "Signature is %s\n" signature; flush stdout;
