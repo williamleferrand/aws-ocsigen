@@ -19,7 +19,8 @@ let create_domain connection domain =
       ("Timestamp", current_timestamp ()) :: 
       ("Version", "2009-04-15") :: [] in 
   
-  let signature = Authentication.sign connection request in 
+  let signature = Authentication.sign connection request in
+  Printf.printf "Signature is %s\n" signature; flush stdout;
   let content = ("Signature", signature) :: request in 
   Http_client.post_urlencoded ~host:connection.http_host ~uri:connection.http_uri ~content () 
   >>= extract_string 
