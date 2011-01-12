@@ -1,0 +1,7 @@
+Aws-ocaml
+
+(c) 2011 william le ferrand, william.le-ferrand@polytechnique.edu, San Francisco CA. 
+
+-- 
+
+client lib for the aws, lwt compliant, based on ocsigen_http_client 
