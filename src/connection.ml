@@ -22,3 +22,12 @@ let create_sdb key secret =
     access_key_id = key ;
   }
 
+let create_s3 key secret = 
+  {
+    http_method = "GET" ; 
+    http_host = "" ; 
+    http_uri = "/" ;
+    secret_access_key = secret ;
+    access_key_id = key ;
+  }
+

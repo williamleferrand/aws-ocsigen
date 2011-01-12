@@ -1,1 +1,1 @@
-<*.ml>: pkg_threads, pkg_ocsigen, pkg_cryptokit
+<*.ml>: pkg_threads, pkg_ocsigen, pkg_cryptokit, pkg_calendar
