@@ -1,8 +1,0 @@
-"Rule: ocaml dependencies ml (%=src/types )": "\029«9‡‡◊2€\159\130Htﬁ›ﬂ\149"
-"Resource: /Users/hypios/reloaded/dev/aws-ocaml/src/simpledb.ml": "\025\012Õ”E\\\022Ì´\002Ã√O¬d"
-"Rule: ocaml: ml -> cmo & cmi (%=src/types )": "Ù4…Ù%¿>—‚ß\157\014\021C\141K"
-"Rule: ocaml: ml -> cmo & cmi (%=src/simpledb )": "À¿÷q\"*$æ&\012\134\136Q\007\144∫"
-"Rule: ocaml: mlpack & cmo* -> cmo & cmi (%=src/aws )": "∏_»\012\155 ®\152b¢TAﬁˆ\145/"
-"Rule: ocaml dependencies ml (%=src/simpledb )": "©o∞æ˘s‚\152‘^©±R«\140¶"
-"Resource: /Users/hypios/reloaded/dev/aws-ocaml/src/aws.mlpack": "¢7ƒØ¿ºœH\007\014>+\t1Â#"
-"Resource: /Users/hypios/reloaded/dev/aws-ocaml/src/types.ml": "ª%µzC\007\007\144®\007Ú”rµ<Ó"
