@@ -6,7 +6,7 @@
 
 open Lwt 
 
-open Types
+open Connection
 open Misc 
 
 let create_domain connection domain =
@@ -21,7 +21,6 @@ let create_domain connection domain =
   
   let signature = Authentication.sign connection request in 
   let content = ("Signature", signature) :: request in 
-  
   Http_client.post_urlencoded ~host:connection.http_host ~uri:connection.http_uri ~content () 
   >>= extract_string 
  

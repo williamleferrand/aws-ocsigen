@@ -4,7 +4,7 @@
  * (c) 2011 William Le Ferrand
  *)
 
-open Types
+open Connection
 open Misc
 
 let sign sec2 request = 
