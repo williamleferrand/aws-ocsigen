@@ -19,6 +19,7 @@ let list connection ?(prefix="") ?(max_keys=50) ?(marker=None) bucket =
 
 let get connection bucket key = 
   let headers = Authentication.s3headers connection "GET" ("/"^bucket^"/"^key) in 
-  let uri = key in
+  let uri = "/" ^ key in
   Http_client.get ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ()
-  >>= extract_string
+  >>= extract_stream
+
