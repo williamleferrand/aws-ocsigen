@@ -50,5 +50,6 @@ let initiate_multipart ?(content_type="text/html") connection bucket key =
   let headers = Authentication.s3headers ~content_type connection "POST" ("/" ^bucket^"/"^key^"?uploads") in
   let uri = "/" ^ key ^ "?uploads" in 
   Http_client.get ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ()
-  >>= extract_string
+  >>= extract_string 
+  >>= Retrieve.extract_string_of_tag "" 
   

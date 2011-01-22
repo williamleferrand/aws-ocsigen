@@ -10,7 +10,7 @@ exception NonStringContent
 
 (* Extract one value *)
 let extract_string_of_tag tag s = 
-  let i = Xmlm.make_input (`String s) in 
+  let i = Xmlm.make_input (`String (0, s)) in 
 
   let rec internal_loop i = 
     lwt __input = Xmlm.input i in
