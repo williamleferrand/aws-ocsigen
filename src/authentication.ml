@@ -47,6 +47,9 @@ let s3headers connection verb ?(content_md5="") ?(content_type="") ?(amzheaders=
   
   Http_headers.add (Http_headers.name "Authorization") authorization
     (Http_headers.add (Http_headers.name "Date") date 
-       (Http_headers.add (Http_headers.name "Transfer-Encoding") "" Http_headers.empty))
+       (Http_headers.add (Http_headers.name "Transfer-Encoding") "" (match content_type with
+	 | "" -> Http_headers.empty
+	 | _ as c -> Http_headers.add (Http_headers.content_type) c Http_headers.empty
+	)))
    
 
