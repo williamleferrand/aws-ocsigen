@@ -17,12 +17,17 @@ let list connection ?(prefix="") ?(max_keys=50) ?(marker=None) bucket =
   Http_client.get ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ()
   >>= extract_string
   
-
 let get connection bucket key = 
   let headers = Authentication.s3headers connection "GET" ("/"^bucket^"/"^key) in 
   let uri = "/" ^ key in
   Http_client.get ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ()
   >>= extract_stream
+
+let put connection bucket key ?(content_type="text/html") content content_length = 
+  let headers = Authentication.s3headers connection ~content_type "PUT" ("/"^bucket^"/"^key) in
+  let uri = "/" ^ key in 
+  Http_client.put ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ~content ~content_length () 
+  >>= fun _ -> return () 
 
 (* Special URI with credentials for upload in a s3 bucket *)
 let string_request connection verb content_md5 content_type amz_headers ressource = 
@@ -49,7 +54,9 @@ let initiate_multipart ?(content_type="text/html") connection bucket key =
   
   let headers = Authentication.s3headers ~content_type connection "POST" ("/" ^bucket^"/"^key^"?uploads") in
   let uri = "/" ^ key ^ "?uploads" in 
-  Http_client.get ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ()
-  >>= extract_string 
-  >>= Retrieve.extract_string_of_tag "" 
+
+  Http_client.post_string ~headers ~raw_headers:true ~host:(bucket^".s3.amazonaws.com") ~uri ~content_type:("", "") ~content:"" ()
+  >>= extract_string
+  >>= fun s -> print_endline s ; return s 
+  >>= Retrieve.extract_string_of_tag "UploadId" 
   

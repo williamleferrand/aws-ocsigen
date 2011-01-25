@@ -707,7 +707,21 @@ let get ?https ?port ?headers ~host ~uri () =
     ()
 
 (*****************************************************************************)
-let post_string ?https ?port ?(headers = Http_headers.empty)
+let put ?(headers = Http_headers.empty) ~host ~uri ~content ~content_length () = 
+  Ocsigen_lib.get_inet_addr host >>= fun inet_addr ->
+   raw_request
+     ~http_method:Ocsigen_http_frame.Http_header.PUT
+     ~content:(Some content)
+     ~content_length:(Int64.of_int content_length)
+     ~headers
+     ~host
+     ~inet_addr
+     ~uri
+     ()
+     ()
+
+(*****************************************************************************)
+let post_string ?https ?port ?(headers = Http_headers.empty) ?(raw_headers = false)
     ~host ~uri ~content ~content_type () =
   Ocsigen_lib.get_inet_addr host >>= fun inet_addr ->
   let content_type = String.concat "/" [fst content_type; snd content_type] in
@@ -717,7 +731,7 @@ let post_string ?https ?port ?(headers = Http_headers.empty)
     ~http_method:Ocsigen_http_frame.Http_header.POST
     ~content:(Some (Ocsigen_stream.of_string content))
     ~content_length:(Int64.of_int (String.length content))
-    ~headers:(Http_headers.add Http_headers.content_type content_type headers)
+    ~headers:(if raw_headers then headers else Http_headers.add Http_headers.content_type content_type headers)
     ~host:(match port with None -> host | Some p -> host^":"^string_of_int p)
     ~inet_addr
     ~uri
