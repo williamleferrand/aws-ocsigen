@@ -33,8 +33,8 @@ let create_s3 key secret =
 
 let create_ec2 key secret = 
   {
-    http_method = "GET" ; 
-    http_host = "" ; 
+    http_method = "POST" ; 
+    http_host = "ec2.amazonaws.com" ; 
     http_uri = "/" ;
     secret_access_key = secret ;
     access_key_id = key ;
