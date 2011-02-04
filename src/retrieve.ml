@@ -52,3 +52,17 @@ let extract_string_of_tag_all tag s =
       (fun  _ -> return acc) in
   
   internal_loop [] i
+
+(* Mem a tag *)
+let mem_tag_of_string tag s = 
+  let i = Xmlm.make_input (`String (0, s)) in
+  catch 
+    (fun () -> 
+      let rec loop_over_xml i = 
+	lwt __input = Xmlm.input i in 
+        match __input with 
+	  | `El_start ((_, local), _) when local = tag -> return true 
+	  | _ -> loop_over_xml i in 
+        loop_over_xml i)
+    (fun _ -> return false)
+  
