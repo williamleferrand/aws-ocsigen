@@ -34,12 +34,6 @@ let encode str =
       if (65 <= c && c <= 90) || (48 <= c && c <= 57 ) || (97 <= c && c <= 122) || (c = 126) || (c = 95) || (c = 46) || (c = 45) then  
 	strlist := Printf.sprintf "%c" str.[i] :: !strlist 
       else 
-	strlist := Printf.sprintf "%%%X" c :: !strlist 
+	strlist :=  Printf.sprintf "%%%X" c :: !strlist 
   done ;
     String.concat "" (List.rev !strlist) 
-
-let encodeplus = 
-  Netencoding.Url.encode ~plus:false 
-
-let decodeplus = 
-  Netencoding.Url.decode 

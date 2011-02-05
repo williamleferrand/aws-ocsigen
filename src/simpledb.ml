@@ -137,3 +137,15 @@ let select connection ?(token=None) request =
    let content = ("Signature", signature) :: request in 
    Http_client.post_urlencoded ~host:connection.http_host ~uri:connection.http_uri ~content () 
    >>= extract_string 
+
+(* 
+rO0ABXNyACdjb20uYW1hem9uLnNkcy5RdWVyeVByb2Nlc3Nvci5Nb3JlVG9rZW7racXLnINNqwMAC0kAFGluaXRpYWxDb25qdW5jdEluZGV4WgAOaXNQYWdlQm91bmRhcnlKAAxsYXN0RW50aXR5SURa
+AApscnFFbmFibGVkSQAPcXVlcnlDb21wbGV4aXR5SgATcXVlcnlTdHJpbmdDaGVja3N1bUkACnVu
+aW9uSW5kZXhaAA11c2VRdWVyeUluZGV4TAANY29uc2lzdGVudExTTnQAEkxqYXZhL2xhbmcvU3Ry
+aW5nO0wAEmxhc3RBdHRyaWJ1dGVWYWx1ZXEAfgABTAAJc29ydE9yZGVydAAvTGNvbS9hbWF6b24v
+c2RzL1F1ZXJ5UHJvY2Vzc29yL1F1ZXJ5JFNvcnRPcmRlcjt4cAAAAAAAAAAAAAAAAIMAAAAAAQAA
+AAAePUXOAAAAAAFwdAALMTI3OTA1MDg0Ni5+cgAtY29tLmFtYXpvbi5zZHMuUXVlcnlQcm9jZXNz
+b3IuUXVlcnkkU29ydE9yZGVyAAAAAAAAAAASAAB4cgAOamF2YS5sYW5nLkVudW0AAAAAAAAAABIA
+AHhwdAAKREVTQ0VORElOR3g=
+
+*)

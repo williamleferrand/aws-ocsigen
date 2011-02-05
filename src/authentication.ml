@@ -18,6 +18,7 @@ let sign sec2 request =
       Printf.sprintf "%s=%s" k v 
     else 
       Printf.sprintf "%s&%s=%s" acc k v) "" encoded_attributes in
+  
   let string_to_sign = Printf.sprintf "%s\n%s\n%s\n%s" sec2.http_method sec2.http_host sec2.http_uri raw_request in
   let hasher = Cryptokit.MAC.hmac_sha1 sec2.secret_access_key in
   let hashed = Cryptokit.hash_string hasher string_to_sign in
@@ -53,3 +54,7 @@ let s3headers connection verb ?(content_md5="") ?(content_type="") ?(amzheaders=
 	)))
    
 
+(* 
+
+http://localhost:1024/backend/users?token=rO0ABXNyACdjb20uYW1hem9uLnNkcy5RdWVyeVByb2Nlc3Nvci5Nb3JlVG9rZW7racXLnINNqwMA%0AC0kAFGluaXRpYWxDb25qdW5jdEluZGV4WgAOaXNQYWdlQm91bmRhcnlKAAxsYXN0RW50aXR5SURa%0AAApscnFFbmFibGVkSQAPcXVlcnlDb21wbGV4aXR5SgATcXVlcnlTdHJpbmdDaGVja3N1bUkACnVu%0AaW9uSW5kZXhaAA11c2VRdWVyeUluZGV4TAANY29uc2lzdGVudExTTnQAEkxqYXZhL2xhbmcvU3Ry%0AaW5nO0wAEmxhc3RBdHRyaWJ1dGVWYWx1ZXEAfgABTAAJc29ydE9yZGVydAAvTGNvbS9hbWF6b24v%0Ac2RzL1F1ZXJ5UHJvY2Vzc29yL1F1ZXJ5JFNvcnRPcmRlcjt4cAAAAAAAAAAAAAAAAHsAAAAAAAAA%0AAAAAAAAAAAAAAABwcHB4 
+http://localhost:1024/backend/users?token=rO0ABXNyACdjb20uYW1hem9uLnNkcy5RdWVyeVByb2Nlc3Nvci5Nb3JlVG9rZW7racXLnINNqwMAC0kAFGluaXRpYWxDb25qdW5jdEluZGV4WgAOaXNQYWdlQm91bmRhcnlKAAxsYXN0RW50aXR5SURaAApscnFFbmFibGVkSQAPcXVlcnlDb21wbGV4aXR5SgATcXVlcnlTdHJpbmdDaGVja3N1bUkACnVuaW9uSW5kZXhaAA11c2VRdWVyeUluZGV4TAANY29uc2lzdGVudExTTnQAEkxqYXZhL2xhbmcvU3RyaW5nO0wAEmxhc3RBdHRyaWJ1dGVWYWx1ZXEAfgABTAAJc29ydE9yZGVydAAvTGNvbS9hbWF6b24vc2RzL1F1ZXJ5UHJvY2Vzc29yL1F1ZXJ5JFNvcnRPcmRlcjt4cAAAAAAAAAAAAAAAAHsAAAAAAAAAAAAAAAAAAAAAAABwcHB4 *)
