@@ -39,7 +39,6 @@ let string_request connection verb content_md5 content_type amz_headers ressourc
       content_type 
       expires 
       amz_headers ressource in
-  Printf.printf "%s\n" string_to_sign ;
   let hasher = Cryptokit.MAC.hmac_sha1 connection.secret_access_key in
   let hashed = Cryptokit.hash_string hasher string_to_sign in
   let encoder = Cryptokit.Base64.encode_multiline () in 
@@ -57,6 +56,5 @@ let initiate_multipart ?(content_type="text/html") connection bucket key =
 
   Http_client.post_string ~headers ~raw_headers:true ~host:(bucket^".s3.amazonaws.com") ~uri ~content_type:("", "") ~content:"" ()
   >>= extract_string
-  >>= fun s -> print_endline s ; return s 
   >>= Retrieve.extract_string_of_tag "UploadId" 
   
