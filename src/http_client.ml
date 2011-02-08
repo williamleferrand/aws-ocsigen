@@ -316,8 +316,10 @@ let raw_request
       None
     else client
   in
-
+  
 (*  let do_pipeline = not client = None in *)
+  
+  let client = None in 
 
   if do_keep_alive then
     Ocsigen_messages.debug2 "--Ocsigen_http_client: Doing keep_alive"
@@ -358,7 +360,7 @@ let raw_request
     let fd = 
       Lwt_unix.socket (Unix.domain_of_sockaddr sockaddr) Unix.SOCK_STREAM 0 
     in
-    Lwt_unix.set_close_on_exec fd;
+    Lwt_unix.set_close_on_exec fd; (* What is the point here? *)
 
     let thr_conn =
       Lwt.catch
@@ -542,6 +544,7 @@ let raw_request
 
 
     let finalize do_keep_alive =
+      Ocsigen_messages.debug2 "------- finalizing !"; 
       let put_in_free_conn ?gf () =
         Ocsigen_messages.debug2
           "--Ocsigen_http_client: Putting in free connections";
@@ -603,31 +606,31 @@ let raw_request
 
     Lwt.catch
       (fun () ->
-         Lwt.catch
-           (fun () ->
+        Lwt.catch
+          (fun () ->
               (* We wait for the request to be sent,
                  because get_frame_ref may change *)
               request_sent >>= fun () ->
-                (* getting and sending back the result: *)
-              !get_frame_ref)
-           (function
-              | Pipeline_failed ->
+              (* getting and sending back the result: *)
+            !get_frame_ref)
+          (function
+            | Pipeline_failed ->
                   (* Previous request closed the pipeline
                      but the request has been sent. We redo it. *)
-                  Ocsigen_messages.warning "Previous request closed the pipeline. Redoing the request on a new connection.";
-                  reopen () >>= fun () ->
-                  !get_frame_ref
-              | e -> Lwt.fail e))
+              Ocsigen_messages.warning "Previous request closed the pipeline. Redoing the request on a new connection.";
+              reopen () >>= fun () ->
+              !get_frame_ref
+            | e -> Lwt.fail e))
 
       (fun e ->
          (* We advice subsequent get_frame that the pipeline failed: *)
-         (match key_new_waiter with
-            | None -> ()
-            | Some (_, new_waiter_awakener) ->
-                Lwt.wakeup_exn new_waiter_awakener Pipeline_failed);
+        (match key_new_waiter with
+          | None -> ()
+          | Some (_, new_waiter_awakener) ->
+            Lwt.wakeup_exn new_waiter_awakener Pipeline_failed);
 
-         finalize false >>= fun () ->
-         Lwt.fail e)
+        finalize false >>= fun () ->
+        Lwt.fail e)
 
     >>= fun http_frame ->
 
@@ -692,6 +695,90 @@ let raw_request
 
 
 (*****************************************************************************)
+let basic_raw_request
+    ?headers ?(https=false) ?port ~content ?content_length
+    ~http_method ~host ~inet_addr ~uri () =
+
+  let port = match port with
+  | None -> if https then 443 else 80
+  | Some p -> p
+  in
+  let sockaddr = Unix.ADDR_INET (inet_addr, port) in
+  let fd = 
+    Lwt_unix.socket (Unix.domain_of_sockaddr sockaddr) Unix.SOCK_STREAM 0 
+  in
+  Lwt_unix.set_close_on_exec fd;
+
+  Lwt.catch
+    (fun () ->
+       Lwt_unix.connect fd sockaddr >>= fun () ->
+       (if https then
+          Lwt_ssl.ssl_connect fd !sslcontext
+        else
+          Lwt.return (Lwt_ssl.plain fd)))
+    (handle_connection_error fd)
+  >>= fun socket ->
+
+  let query = Ocsigen_http_frame.Http_header.Query (http_method, uri) in
+  let conn = Ocsigen_http_com.create_receiver
+      (Ocsigen_config.get_server_timeout ())
+      Ocsigen_http_com.Answer socket in
+  let headers =
+    Http_headers.replace
+      (Http_headers.name "host")
+      host
+      (match headers with
+         | None -> Http_headers.empty
+         | Some h -> h)
+  in
+  let f slot =
+
+    match content with
+    | None ->
+        let empty_result = Ocsigen_http_frame.empty_result () in
+        Ocsigen_http_com.send
+          slot
+          ~mode:query
+          ~clientproto:Ocsigen_http_frame.Http_header.HTTP11
+          ~head:false
+          ~keep_alive:false
+          ~sender:request_sender
+          {empty_result with
+           Ocsigen_http_frame.res_headers = headers}
+    | Some stream ->
+        Ocsigen_senders.Stream_content.result_of_content stream >>= fun r ->
+        Ocsigen_http_com.send
+          slot
+          ~mode:query
+          ~clientproto:Ocsigen_http_frame.Http_header.HTTP11
+          ~head:false
+          ~keep_alive:false
+          ~sender:request_sender
+          {r with
+           Ocsigen_http_frame.res_content_length= content_length;
+           Ocsigen_http_frame.res_headers= headers;
+          }
+
+  in
+  Ocsigen_http_com.start_processing conn f; (* starting the request *)
+(*      Ocsigen_http_com.wait_all_senders conn >>= fun () -> (* not needed *) *)
+  Lwt.catch
+    (fun () ->
+      Ocsigen_http_com.get_http_frame
+        ~head:(http_method = Ocsigen_http_frame.Http_header.HEAD)
+        conn
+       >>= fun http_frame ->
+      (match http_frame.Ocsigen_http_frame.frame_content with
+      | None   -> Lwt_ssl.close socket
+      | Some c ->
+        Ocsigen_stream.add_finalizer c (fun _ ->  Ocsigen_messages.debug2 "closing socket after stream is read";  Lwt_ssl.close socket);
+        Lwt.return ())
+      >>= fun () ->
+      Lwt.return http_frame)
+    (fun e -> Lwt_ssl.close socket >>= fun () -> Lwt.fail e)
+
+let raw_request = basic_raw_request 
+(*****************************************************************************)
 let get ?https ?port ?headers ~host ~uri () =
   Ocsigen_lib.get_inet_addr host >>= fun inet_addr ->
   raw_request
@@ -700,11 +787,12 @@ let get ?https ?port ?headers ~host ~uri () =
     ?headers
     ~http_method:Ocsigen_http_frame.Http_header.GET
     ~content:None
+   
     ~host:(match port with None -> host | Some p -> host^":"^string_of_int p)
     ~inet_addr
     ~uri
     ()
-    ()
+   
 
 (*****************************************************************************)
 let put ?(headers = Http_headers.empty) ~host ~uri ~content ~content_length () = 
@@ -717,7 +805,6 @@ let put ?(headers = Http_headers.empty) ~host ~uri ~content ~content_length () =
      ~host
      ~inet_addr
      ~uri
-     ()
      ()
 
 (*****************************************************************************)
@@ -736,7 +823,7 @@ let post_string ?https ?port ?(headers = Http_headers.empty) ?(raw_headers = fal
     ~inet_addr
     ~uri
     ()
-    ()
+   
 
 (*****************************************************************************)
 let post_urlencoded ?https ?port ?headers ~host ~uri ~content () =
@@ -746,7 +833,7 @@ let post_urlencoded ?https ?port ?headers ~host ~uri ~content () =
       Printf.sprintf "%s=%s" k v 
     else 
       Printf.sprintf "%s&%s=%s" acc k v) "" encoded_attributes in
-
+  
   post_string ?https ?port ?headers
     ~host ~uri
     ~content:raw_request
@@ -831,7 +918,7 @@ let basic_raw_request
       (match http_frame.Ocsigen_http_frame.frame_content with
       | None   -> Lwt_ssl.close socket
       | Some c ->
-        Ocsigen_stream.add_finalizer c (fun _ -> Lwt_ssl.close socket);
+        Ocsigen_stream.add_finalizer c (fun _ ->  Ocsigen_messages.debug2 "closing socket after stream is read";  Lwt_ssl.close socket);
         Lwt.return ())
       >>= fun () ->
       Lwt.return http_frame)

@@ -19,7 +19,6 @@ let create_domain connection domain =
       ("Version", "2009-04-15") :: [] in 
   
   let signature = Authentication.sign connection request in
-  Printf.printf "Signature is %s\n" signature; flush stdout;
   let content = ("Signature", signature) :: request in 
 
   Http_client.post_urlencoded ~host:connection.http_host ~uri:connection.http_uri ~content () 
@@ -36,7 +35,6 @@ let delete_domain connection domain =
       ("Version", "2009-04-15") :: [] in 
   
   let signature = Authentication.sign connection request in
-  Printf.printf "Signature is %s\n" signature; flush stdout;
   let content = ("Signature", signature) :: request in 
   Http_client.post_urlencoded ~host:connection.http_host ~uri:connection.http_uri ~content () 
   >>= extract_string 
@@ -99,7 +97,6 @@ let delete_attributes connection domain item attributes =
 	("Version", "2009-04-15") :: atts in 
     
   let signature = Authentication.sign connection request in
-  Printf.printf "Signature is %s\n" signature; flush stdout;
   let content = ("Signature", signature) :: request in 
   Http_client.post_urlencoded ~host:connection.http_host ~uri:connection.http_uri ~content () 
   >>= extract_string 
@@ -117,7 +114,6 @@ let get_attributes connection domain item =
 	("Version", "2009-04-15") :: [] in 
     
     let signature = Authentication.sign connection request in
-    Printf.printf "Signature is %s\n" signature; flush stdout;
     let content = ("Signature", signature) :: request in 
     Http_client.post_urlencoded ~host:connection.http_host ~uri:connection.http_uri ~content () 
     >>= extract_string 
@@ -133,7 +129,6 @@ let select connection ?(token=None) request =
        ("Version", "2009-04-15") :: (match token with None -> [] | Some id -> [ "NextToken", id ]) in
    
    let signature = Authentication.sign connection request in
-   Printf.printf "Signature is %s\n" signature; flush stdout;
    let content = ("Signature", signature) :: request in 
    Http_client.post_urlencoded ~host:connection.http_host ~uri:connection.http_uri ~content () 
    >>= extract_string 
