@@ -18,12 +18,20 @@ let expiration delay =
 let extract_string frame = 
    match frame.Ocsigen_http_frame.frame_content with
        None -> failwith "Server down (raised from misc.ml)"
-     | Some data -> Ocsigen_stream.string_of_stream (Ocsigen_stream.get data) 
+     | Some data -> Ocsigen_stream.string_of_stream (Ocsigen_stream.get data)
+		    >>= fun s -> 
+                             catch (fun () -> Ocsigen_stream.finalize data >>= fun _ -> return s)
+			           (fun _ -> return s)
+
+let extract_nothing frame = 
+  match frame.Ocsigen_http_frame.frame_content with
+      None -> return () 
+    | Some data -> catch (fun () -> Ocsigen_stream.finalize data) (fun _ -> return ()) 
 
 let extract_stream frame = 
    match frame.Ocsigen_http_frame.frame_content with
        None -> failwith "Server down (raised from misc.ml)"
-     | Some data -> return (Ocsigen_stream.get data) 
+     | Some data -> return data
 		    
 
 (* Quick and dirty, but aws seems to have an issue with the wildcard *)

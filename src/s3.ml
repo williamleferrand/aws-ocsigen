@@ -27,7 +27,7 @@ let put connection bucket key ?(content_type="text/html") content content_length
   let headers = Authentication.s3headers connection ~content_type "PUT" ("/"^bucket^"/"^key) in
   let uri = "/" ^ key in 
   Http_client.put ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ~content ~content_length () 
-  >>= fun _ -> return () 
+  >>= extract_nothing
 
 (* Special URI with credentials for upload in a s3 bucket *)
 let string_request connection verb content_md5 content_type amz_headers ressource = 
