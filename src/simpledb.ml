@@ -110,6 +110,7 @@ let get_attributes connection domain item =
 	("ItemName", item) ::
 	("SignatureMethod", "HmacSHA1") ::
 	("SignatureVersion", "2") ::
+	("ConsistentRead", "true") :: 
 	("Timestamp", current_timestamp ()) :: 
 	("Version", "2009-04-15") :: [] in 
     
@@ -125,6 +126,7 @@ let select connection ?(token=None) request =
        ("SelectExpression", request) ::
        ("SignatureMethod", "HmacSHA1") ::
        ("SignatureVersion", "2") ::
+       ("ConsistentRead", "true") :: 
        ("Timestamp", (current_timestamp ())) ::
        ("Version", "2009-04-15") :: (match token with None -> [] | Some id -> [ "NextToken", id ]) in
    
