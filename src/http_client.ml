@@ -827,13 +827,14 @@ let post_string ?https ?port ?(headers = Http_headers.empty) ?(raw_headers = fal
 
 (*****************************************************************************)
 let post_urlencoded ?https ?port ?headers ~host ~uri ~content () =
-  let encoded_attributes = List.map (fun (k, v) -> encode k, encode v) content in
+  let raw_request = encode_cpl content in 
+  (* List.map (fun (k, v) -> encode k, encode v) content in
   let raw_request = List.fold_left (fun acc (k,v) -> 
     if acc = "" then 
       Printf.sprintf "%s=%s" k v 
     else 
-      Printf.sprintf "%s&%s=%s" acc k v) "" encoded_attributes in
-  
+      Printf.sprintf "%s&%s=%s" acc k v) "" encoded_attributes in *)
+  print_endline raw_request ;
   post_string ?https ?port ?headers
     ~host ~uri
     ~content:raw_request

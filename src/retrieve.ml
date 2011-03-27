@@ -89,13 +89,43 @@ let get_attribute name s =
      match __input with
        | `El_start ((_, local), _) when local = "Value" -> extract_value i 
        | _ -> goto_value i 
-and extract_value i =
+     and extract_value i =
     lwt __input = Xmlm.input i in 
      match __input with 
        | `Data d -> return (Some d) 
        | _ -> extract_value i in
    goto_name i)
     (fun _ -> return None)
+
+
+let get_attributes_to_list s =
+  let i = Xmlm.make_input (`String (0, s)) in 
+  let p = Hashtbl.create 0 in
+  let rec goto_name  i = 
+      lwt __input = Xmlm.input i in 
+      match __input with
+	 | `El_start ((_, local), _) when local = "Name" -> read_name  i 
+	 | _ -> goto_name  i
+  and read_name  i = 
+      lwt __input = Xmlm.input i in 
+      match __input with 
+	| `Data d -> goto_value  d i
+	| _ -> goto_name  i
+  and goto_value  l i =
+     lwt __input = Xmlm.input i in 
+     match __input with
+       | `El_start ((_, local), _) when local = "Value" -> extract_value  l i 
+       | _ -> goto_value  l i 
+  and extract_value  l i =
+     lwt __input = Xmlm.input i in 
+     match __input with 
+       | `Data d -> Hashtbl.add p l d; goto_name i  
+       | _ -> extract_value l i in
+  catch 
+    (fun () -> lwt _ = goto_name i in return p)
+    (fun _ -> return p)
+  
+  
 
 (* Mem a tag *)
 exception Missing 

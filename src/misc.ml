@@ -18,15 +18,15 @@ let expiration delay =
 let extract_string frame = 
    match frame.Ocsigen_http_frame.frame_content with
        None -> failwith "Server down (raised from misc.ml)"
-     | Some data -> Ocsigen_stream.string_of_stream (Ocsigen_stream.get data)
+     | Some data -> Ocsigen_stream.string_of_stream 1000000 (Ocsigen_stream.get data)
 		    >>= fun s -> 
-                             catch (fun () -> Ocsigen_stream.finalize data >>= fun _ -> return s)
+                             catch (fun () -> Ocsigen_stream.finalize data `Success >>= fun _ -> return s)
 			           (fun _ -> return s)
 
 let extract_nothing frame = 
   match frame.Ocsigen_http_frame.frame_content with
       None -> return () 
-    | Some data -> catch (fun () -> Ocsigen_stream.finalize data) (fun _ -> return ()) 
+    | Some data -> catch (fun () -> Ocsigen_stream.finalize data `Success) (fun _ -> return ()) 
 
 let extract_stream frame = 
    match frame.Ocsigen_http_frame.frame_content with
@@ -45,3 +45,16 @@ let encode str =
 	strlist :=  Printf.sprintf "%%%X" c :: !strlist 
   done ;
     String.concat "" (List.rev !strlist) 
+
+(*
+let encode = Netencoding.Url.encode ~plus:false 
+*)
+(* It is not even better, it fails for utf8 *)
+let encode_cpl = Netencoding.Url.mk_url_encoded_parameters
+let encode_cpl l = 
+  List.fold_left (fun acc (k,v) -> 
+    if acc = "" then 
+      Printf.sprintf "%s=%s" (encode k)  (encode v) 
+    else 
+      Printf.sprintf "%s&%s=%s" acc (encode k) (encode v)) "" l
+  
