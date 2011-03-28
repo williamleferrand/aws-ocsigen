@@ -157,7 +157,7 @@ let mem_tag tag s =
   
 (* List all sdb results for select *)
 
-let list_attributes2 s = 
+let list_attributes s = 
   let i = Xmlm.make_input (`String (0, s)) in
   let rec goto_start i = 
     lwt __input = Xmlm.input i in 
