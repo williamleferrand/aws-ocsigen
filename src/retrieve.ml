@@ -21,6 +21,7 @@ let clean s =
   Str.global_replace (Str.regexp_string "\n") "" s 
 
 exception NonStringContent
+exception Error
 
 (* Extract one value *)
 let extract_string_of_tag tag s = 
@@ -155,70 +156,83 @@ let mem_tag tag s =
     (function e -> return false)
   
 (* List all sdb results for select *)
-let list_attributes s = 
+
+let list_attributes2 s = 
   let i = Xmlm.make_input (`String (0, s)) in
   let rec goto_start i = 
     lwt __input = Xmlm.input i in 
     match __input with 
-      | `El_start ((_, local), _) when local = "SelectResult" -> list_items [] i 
+      | `El_start ((_, "SelectResult"), _) -> get_item [] i 
       | _ -> goto_start i 
-and list_items acc i = 
-    lwt __input = Xmlm.input i in 
-    match __input with 
-      | `El_start ((_, local), _) when local = "Item" -> read_item acc "" [] i 
-      | `El_start ((_, local), _) when local = "NextToken" -> read_token acc i
-      | `El_end -> return (acc, None)
-    | _ -> list_items acc i 
-and read_item acc cname cacc i = 
-    lwt __input = Xmlm.input i in 
-    match __input with 
-    | `El_end -> list_items ((cname, cacc)::acc) i 
-    | `El_start ((_, local), _) when local = "Name" -> read_name acc cname cacc i 
-    | `El_start ((_, local), _) when local = "Attribute" -> read_attribute acc cname cacc i 
-    | _ -> read_item acc cname cacc i 
-and read_name acc cname cacc i = 
-    lwt __input = Xmlm.input i in 
-    match __input with 
-    | `Data d -> read_name acc d cacc i
-    | `El_end -> read_item acc cname cacc i 
-    | _ -> read_name acc cname cacc i 
-and read_attribute acc cname cacc i = 
-    lwt __input = Xmlm.input i in 
-    match __input with 
-    | `El_start ((_, local), _) when local = "Name" -> read_name2 acc cname cacc i 
-    | `El_end -> read_item acc cname cacc i
-    | _ -> read_attribute acc cname cacc i 
-and read_name2 acc cname cacc i = 
-    lwt __input = Xmlm.input i in 
-    match __input with 
-    | `Data d -> read_value acc cname cacc d i 
-    | _ -> read_name2 acc cname cacc i
-and read_value acc cname cacc name i =
-      lwt __input = Xmlm.input i in 
-    match __input with 
-    | `El_start ((_, local),_) when local = "Value" -> extract_value acc cname cacc name i  
-    | _ -> read_value acc cname cacc name i 
-and extract_value acc cname cacc name i = 
-      lwt __input = Xmlm.input i in 
-    match __input with 
-    | `Data d -> close_value acc cname ((name, d) :: cacc) i 
-    | _ -> extract_value acc cname cacc name i 
-
- and close_value acc cname cacc i = 
-    lwt __input = Xmlm.input i in 
-match __input with 
-  | `El_end -> read_attribute acc cname cacc i
-  | _ -> close_value acc cname cacc i
- 
- and read_token acc i = 
+  and get_item acc i = 
      lwt __input = Xmlm.input i in 
-match __input with 
-    | `Data d -> return (List.rev acc, Some (trim (clean d)))
-    | _ -> return (acc, None)
+     match __input with 
+       | `El_start ((_, "Item"), _) -> get_name acc i
+       | `El_start ((_, "NextToken"), _) -> get_token acc i
+       | `El_end -> return (acc, None)
+       | _ -> fail Error
+  and get_name acc i = 
+    lwt __input = Xmlm.input i in 
+    match __input with 
+      | `El_start ((_, "Name"), _) -> get_name_data acc i 
+      | _ -> fail Error
+  and get_name_data acc i = 
+    lwt __input = Xmlm.input i in 
+    match __input with 
+      | `Data d -> close_name_data acc d i 
+      | _ -> fail Error
+  and close_name_data acc name i = 
+    lwt __input = Xmlm.input i in 
+    match __input with 
+      | `El_end -> get_attribute acc name [] i
+      | _ -> fail Error
+  and get_attribute acc name lacc i =
+    lwt __input = Xmlm.input i in 
+    match __input with 
+      | `El_start ((_, "Attribute"), _) -> get_attribute_name acc name lacc i 
+      | `El_end -> get_item ((name, lacc)::acc) i
+      | _ -> fail Error
+  and get_attribute_name acc name lacc i = 
+    lwt __input = Xmlm.input i in 
+    match __input with 
+      | `El_start ((_, "Name"), _ ) -> get_attribute_name_data acc name lacc i
+      | _ -> fail Error
+  and get_attribute_name_data acc name lacc i = 
+    lwt __input = Xmlm.input i in 
+    match __input with 
+      | `Data d -> close_attribute_name acc name lacc d i
+      | _ -> fail Error
+  and close_attribute_name acc name lacc k i =
+    lwt __input = Xmlm.input i in 
+    match __input with 
+      | `El_end -> get_attribute_value acc name lacc k i
+      | _ -> fail Error
+  and get_attribute_value acc name lacc k i = 
+    lwt __input = Xmlm.input i in 
+    match __input with 
+      | `El_start ((_, "Value"), _) -> get_attribute_value_data acc name lacc k i
+      | _ -> fail Error
+  and get_attribute_value_data acc name lacc k i = 
+    lwt __input = Xmlm.input i in 
+    match __input with
+      | `Data d -> close_attribute_value_data acc name ((k,d)::lacc) i 
+      | `El_end -> close_attribute acc name lacc i
+      | _ -> fail Error
+  and close_attribute_value_data acc name lacc i = 
+    lwt __input = Xmlm.input i in 
+    match __input with 
+      | `El_end -> close_attribute acc name lacc i
+      | _ -> fail Error
+  and close_attribute acc name lacc i = 
+    lwt __input = Xmlm.input i in 
+    match __input with 
+      | `El_end -> get_attribute acc name lacc i
+      | _ -> fail Error
+  and get_token acc i  =
+    lwt __input = Xmlm.input i in 
+    match __input with 
+      | `Data d -> return (acc, Some d)
+      | _ -> return (acc, None)
+  in
 
- in
-goto_start i
-      
-      
-
-  
+  goto_start i 

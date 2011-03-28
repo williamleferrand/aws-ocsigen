@@ -14,3 +14,6 @@ install:
 
 remove:
 	ocamlfind remove aws
+
+test:
+	ocamlbuild src/test.byte
