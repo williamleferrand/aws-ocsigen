@@ -216,7 +216,7 @@ let list_attributes s =
     lwt __input = Xmlm.input i in 
     match __input with
       | `Data d -> close_attribute_value_data acc name ((k,d)::lacc) i 
-      | `El_end -> close_attribute acc name lacc i
+      | `El_end -> close_attribute acc name ((k, "")::lacc) i
       | _ -> fail Error
   and close_attribute_value_data acc name lacc i = 
     lwt __input = Xmlm.input i in 
