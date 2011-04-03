@@ -71,7 +71,7 @@ let extract_string_of_tag_all tag s =
 
 (* Get an element *)
 
-let get_attribute name s = 
+let get_attribute ?(decode=false) name s = 
   let i = Xmlm.make_input (`String (0, s)) in
   catch 
     (fun () -> 
@@ -93,13 +93,13 @@ let get_attribute name s =
      and extract_value i =
     lwt __input = Xmlm.input i in 
      match __input with 
-       | `Data d -> return (Some d) 
-       | _ -> extract_value i in
+       | `Data d -> return (Some (if decode then Netencoding.Base64.decode d else d)) 
+       | _ -> return (Some "") in
    goto_name i)
     (fun _ -> return None)
 
 
-let get_attributes_to_list s =
+let get_attributes_to_list ?(decode=false) s =
   let i = Xmlm.make_input (`String (0, s)) in 
   let p = Hashtbl.create 0 in
   let rec goto_name  i = 
@@ -120,8 +120,8 @@ let get_attributes_to_list s =
   and extract_value  l i =
      lwt __input = Xmlm.input i in 
      match __input with 
-       | `Data d -> Hashtbl.add p l d; goto_name i  
-       | _ -> extract_value l i in
+       | `Data d -> Hashtbl.add p l (if decode then Netencoding.Base64.decode d else d); goto_name i  
+       | _ -> Hashtbl.add p l ""; goto_name i in
   catch 
     (fun () -> lwt _ = goto_name i in return p)
     (fun _ -> return p)
@@ -157,7 +157,7 @@ let mem_tag tag s =
   
 (* List all sdb results for select *)
 
-let list_attributes s = 
+let list_attributes ?(decode=false) s  = 
   let i = Xmlm.make_input (`String (0, s)) in
   let rec goto_start i = 
     lwt __input = Xmlm.input i in 
@@ -215,7 +215,7 @@ let list_attributes s =
   and get_attribute_value_data acc name lacc k i = 
     lwt __input = Xmlm.input i in 
     match __input with
-      | `Data d -> close_attribute_value_data acc name ((k,d)::lacc) i 
+      | `Data d -> close_attribute_value_data acc name ((k, (if decode then Netencoding.Base64.decode d else d))::lacc) i 
       | `El_end -> close_attribute acc name ((k, "")::lacc) i
       | _ -> fail Error
   and close_attribute_value_data acc name lacc i = 

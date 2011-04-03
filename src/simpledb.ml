@@ -56,12 +56,12 @@ let list_domain connection max_domain =
   >>= extract_string 
   
 
-let put_attributes connection ?(replace=false) domain item attributes = 
+let put_attributes connection ?(replace=false) ?(encode=false) domain item attributes = 
     let _, atts = List.fold_left
       (fun (c, acc) (name, value) -> 
 	(c+1), 
 	((Printf.sprintf "Attribute.%d.Name" c), name) :: 
-	  ((Printf.sprintf "Attribute.%d.Value" c), value) :: (if replace then ((Printf.sprintf "Attribute.%d.Replace" c), "true") :: acc else acc)) (1, []) attributes in
+	  ((Printf.sprintf "Attribute.%d.Value" c), (if encode then Netencoding.Base64.encode value else value)) :: (if replace then ((Printf.sprintf "Attribute.%d.Replace" c), "true") :: acc else acc)) (1, []) attributes in
     
     let request = 
       ("AWSAccessKeyId", connection.access_key_id) :: 
