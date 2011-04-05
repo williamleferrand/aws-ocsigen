@@ -14,13 +14,13 @@ open Connection
 let list connection ?(prefix="") ?(max_keys=50) ?(marker=None) bucket = 
   let headers = Authentication.s3headers connection "GET" ("/"^bucket^"/") in 
   let uri = (Printf.sprintf "/?prefix=%s&max-keys=%d" prefix max_keys)^(match marker with Some n -> "&marker="^n | None -> "") in
-  Http_client.get ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ()
+  Ocsigen_http_client.get ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ()
   >>= extract_string
   
 let get connection bucket key = 
   let headers = Authentication.s3headers connection "GET" ("/"^bucket^"/"^key) in 
   let uri = "/" ^ key in
-  Http_client.get ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ()
+  Ocsigen_http_client.get ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ()
   >>= extract_stream
 
 let put connection bucket key ?(content_type="text/html") content content_length = 
@@ -54,7 +54,7 @@ let initiate_multipart ?(content_type="text/html") connection bucket key =
   let headers = Authentication.s3headers ~content_type connection "POST" ("/" ^bucket^"/"^key^"?uploads") in
   let uri = "/" ^ key ^ "?uploads" in 
 
-  Http_client.post_string ~headers ~raw_headers:true ~host:(bucket^".s3.amazonaws.com") ~uri ~content_type:("", "") ~content:"" ()
+  Ocsigen_http_client.post_string ~headers ~host:(bucket^".s3.amazonaws.com") ~uri ~content_type:("", "") ~content:"" ()
   >>= extract_string
   >>= Retrieve.extract_string_of_tag "UploadId" 
   

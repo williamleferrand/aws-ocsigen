@@ -89,15 +89,15 @@ let terminate_instances connection instance_ids =
 (* LOCAL DETAILS ******************************************************************)
   
 let local_details_ipv4 () = 
-  Http_client.get ~host:"169.254.169.254" ~uri:"/latest/meta-data/local-ipv4" ()
+  Ocsigen_http_client.get ~host:"169.254.169.254" ~uri:"/latest/meta-data/local-ipv4" ()
   >>= extract_string 
 
 let local_details_instance_id () =
-  Http_client.get ~host:"169.254.169.254" ~uri:"/latest/meta-data/instance-id" ()
+  Ocsigen_http_client.get ~host:"169.254.169.254" ~uri:"/latest/meta-data/instance-id" ()
   >>= extract_string 
  
 (* GET http://169.254.169.254/latest/user-data *)
 let local_details_user_data () = 
-  Http_client.get ~host:"169.254.169.254" ~uri:"/latest/user_data" ()
+  Ocsigen_http_client.get ~host:"169.254.169.254" ~uri:"/latest/user_data" ()
   >>= extract_string 
   
