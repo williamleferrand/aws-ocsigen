@@ -1,6 +1,6 @@
 name="aws"
 version="0.2"
 description="Aws"
-requires="ocsigenserver, cryptokit, calendar, xmlm"
+requires="ocsigenserver, cryptokit, calendar, xmlm-lwt"
 archive(byte) = "aws.cmo"
 archive(native) = "aws.cmx"
